@@ -1,0 +1,47 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mission Canyon Chipping Project",
+        "program": "Chipping",
+        "status": "Implementation",
+        "location": "Mission Canyon",
+        "description": "Neighborhood chipping support for defensible space."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-119.699, 34.463]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Goleta Foothills Grazing Pilot",
+        "program": "Grazing",
+        "status": "Planning",
+        "location": "Goleta Foothills",
+        "description": "Targeted grazing pilot to reduce fine fuels."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-119.828, 34.470]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Home Hardening Outreach - Santa Ynez Valley",
+        "program": "Outreach",
+        "status": "Completed",
+        "location": "Santa Ynez Valley",
+        "description": "Public education and home hardening recommendations."
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [-120.080, 34.614]
+      }
+    }
+  ]
+}
