@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Santa Barbara County Fire Safe Council | Project Map</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Santa Barbara County Fire Safe Council</h1>
+      <p>Current Projects Map</p>
+    </div>
+    <nav>
+      <a href="#map">Project Map</a>
+      <a href="#project-list">Project List</a>
+      <a href="#">About</a>
+    </nav>
+  </header>
+
+  <main class="page">
+    <section class="intro">
+      <a href="#project-list" class="table-link">View all projects in a table</a>
+      <h2>Project Map</h2>
+      <p>
+        This site shows current wildfire resilience and community safety projects in Santa Barbara County.
+      </p>
+    </section>
+
+    <section class="filters">
+      <label>
+        Program Type:
+        <select id="programFilter">
+          <option value="All">All</option>
+          <option value="Chipping">Chipping</option>
+          <option value="Grazing">Grazing</option>
+          <option value="Defensible Space">Defensible Space</option>
+          <option value="Home Hardening">Home Hardening</option>
+          <option value="Outreach">Outreach</option>
+        </select>
+      </label>
+
+      <label>
+        Status:
+        <select id="statusFilter">
+          <option value="All">All</option>
+          <option value="Planning">Planning</option>
+          <option value="Implementation">Implementation</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </label>
+    </section>
+
+    <section class="map-wrap">
+      <div id="map"></div>
+    </section>
+
+    <section id="project-list" class="project-list-wrap">
+      <h3>Project List</h3>
+      <ul id="projectList"></ul>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
