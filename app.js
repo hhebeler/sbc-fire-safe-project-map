@@ -9,6 +9,7 @@ let projectMarkersLayer = L.layerGroup().addTo(map);
 
 let countyBoundaryLayer;
 let fuelTreatmentLayer;
+let montecitoFirewiseLayer;
 let layerControl;
 
 // -------------------------
@@ -18,6 +19,7 @@ async function initMap() {
   await loadProjects();
   await loadCountyBoundary();
   await loadFuelTreatments();
+  await loadMontecitoFirewisePoints();
   addLayerControl();
 }
 
@@ -154,6 +156,40 @@ async function loadFuelTreatments() {
 }
 
 // -------------------------
+// MONTECITO FIREWISE POINTS
+// -------------------------
+async function loadMontecitoFirewisePoints() {
+  const response = await fetch('montecito_firewise_points.geojson');
+  const data = await response.json();
+
+  montecitoFirewiseLayer = L.geoJSON(data, {
+    pointToLayer: function(feature, latlng) {
+      return L.circleMarker(latlng, {
+        radius: 8,
+        color: '#111827',
+        weight: 1,
+        fillColor: '#ec4899',
+        fillOpacity: 0.9
+      });
+    },
+    onEachFeature: function(feature, layer) {
+      const p = feature.properties || {};
+
+      layer.bindPopup(`
+        <strong>${p.PLACE_NAME || 'Montecito Firewise'}</strong>
+      `);
+
+      layer.bindTooltip(p.PLACE_NAME || 'Montecito Firewise', {
+        permanent: true,
+        direction: 'top',
+        offset: [0, -10],
+        className: 'point-label'
+      });
+    }
+  }).addTo(map);
+}
+
+// -------------------------
 // LAYER CONTROL
 // -------------------------
 function addLayerControl() {
@@ -164,7 +200,8 @@ function addLayerControl() {
   const overlayMaps = {
     "Project Points": projectMarkersLayer,
     "Santa Barbara County Boundary": countyBoundaryLayer,
-    "Fuel Treatment Areas": fuelTreatmentLayer
+    "Fuel Treatment Areas": fuelTreatmentLayer,
+    "Montecito Firewise Points": montecitoFirewiseLayer
   };
 
   layerControl = L.control.layers(null, overlayMaps, {
@@ -179,8 +216,3 @@ document.getElementById('programFilter').addEventListener('change', renderProjec
 document.getElementById('statusFilter').addEventListener('change', renderProjects);
 
 initMap();
-
-.leaflet-control-layers {
-  font-size: 14px;
-  border-radius: 8px;
-}
