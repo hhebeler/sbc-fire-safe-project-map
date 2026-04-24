@@ -1,0 +1,9 @@
+{
+"type": "FeatureCollection",
+"name": "montecito_firewise_points",
+"crs": { "type": "name", "properties": { "name": "urn:ogc:def:crs:OGC:1.3:CRS84" } },
+"features": [
+{ "type": "Feature", "properties": { "PLACE_NAME": "Montecito Firewise South" }, "geometry": { "type": "Point", "coordinates": [ -119.628794031914467, 34.428702158305512 ] } },
+{ "type": "Feature", "properties": { "PLACE_NAME": "Montecito Firewise North" }, "geometry": { "type": "Point", "coordinates": [ -119.62406280086708, 34.449263479539837 ] } }
+]
+}
