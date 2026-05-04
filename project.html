@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>Fuel Treatment Detail | Santa Barbara County Fire Safe Council</title>
+
+  <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <h1>Santa Barbara County Fire Safe Council</h1>
+      <p>Fuel Treatment Detail</p>
+    </div>
+
+    <nav>
+      <a href="index.html">Map</a>
+      <a href="index.html#project-list">Fuel Treatment List</a>
+      <a href="index.html#about">About</a>
+    </nav>
+  </header>
+
+  <main class="page detail-page">
+    <a href="index.html" class="back-link">← Back to Fuel Treatment Map</a>
+
+    <section class="project-detail-card">
+      <h2 id="projectName">Fuel Treatment Area</h2>
+      <p id="projectDescription" class="project-description"></p>
+
+      <div class="detail-grid">
+        <div>
+          <h3>Project Basics</h3>
+          <p><strong>Type:</strong> <span id="projectType">Not listed</span></p>
+          <p><strong>Status:</strong> <span id="projectStatus">Not listed</span></p>
+          <p><strong>Acres:</strong> <span id="projectAcres">Not listed</span></p>
+          <p><strong>Year:</strong> <span id="projectYear">Not listed</span></p>
+        </div>
+
+        <div>
+          <h3>Organization</h3>
+          <p><strong>Lead:</strong> <span id="projectLead">Not listed</span></p>
+          <p><strong>Funding Source:</strong> <span id="projectFunding">Not listed</span></p>
+          <p><strong>Contact:</strong> <span id="projectContact">Not listed</span></p>
+        </div>
+      </div>
+    </section>
+
+    <section class="project-detail-card">
+      <h3>Project Location</h3>
+      <div id="detailMap"></div>
+    </section>
+
+    <section class="project-detail-card">
+      <h3>All Available Attributes</h3>
+      <table class="attribute-table">
+        <tbody id="attributeTableBody"></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+  <script src="project.js"></script>
+</body>
+</html>
