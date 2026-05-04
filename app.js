@@ -55,6 +55,7 @@ function makePinIcon(fillColor) {
   });
 }
 
+
 const iconPotential = makePinIcon('#f4b000');
 const iconCurrent = makePinIcon('#2b7de9');
 const iconCompleted = makePinIcon('#5b4bc4');
