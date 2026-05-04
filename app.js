@@ -1,218 +1,121 @@
+// Initialize the map centered on Santa Barbara County
 const map = L.map('map').setView([34.7, -120.0], 9);
 
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-  attribution: '&copy; OpenStreetMap contributors'
-}).addTo(map);
-
-let allProjectFeatures = [];
-let projectMarkersLayer = L.layerGroup().addTo(map);
-
-let countyBoundaryLayer;
-let fuelTreatmentLayer;
-let montecitoFirewiseLayer;
-let layerControl;
-
-// -------------------------
-// INIT
-// -------------------------
-async function initMap() {
-  await loadProjects();
-  await loadCountyBoundary();
-  await loadFuelTreatments();
-  await loadMontecitoFirewisePoints();
-  addLayerControl();
-}
-
-// -------------------------
-// PROJECT POINTS
-// -------------------------
-async function loadProjects() {
-  const response = await fetch('projects.geojson');
-  const data = await response.json();
-  allProjectFeatures = data.features || [];
-  renderProjects();
-}
-
-function getProjectColor(program) {
-  switch (program) {
-    case 'Chipping':
-      return '#2563eb';
-    case 'Grazing':
-      return '#16a34a';
-    case 'Defensible Space':
-      return '#dc2626';
-    case 'Home Hardening':
-      return '#7c3aed';
-    case 'Outreach':
-      return '#ea580c';
-    default:
-      return '#374151';
+// Clean Esri World Topographic basemap
+L.tileLayer(
+  'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+  {
+    attribution: 'Tiles &copy; Esri'
   }
-}
+).addTo(map);
 
-function renderProjects() {
-  const programValue = document.getElementById('programFilter').value;
-  const statusValue = document.getElementById('statusFilter').value;
+// -----------------------------------------------------------------------------
+// FUTURE FUEL TREATMENT GEOJSON PLACEHOLDER
+// -----------------------------------------------------------------------------
+// This function is ready for future fuel treatment GeoJSON files.
+// It is intentionally NOT called right now.
+//
+// When you are ready to add a GeoJSON file, upload it to the repo root and call:
+//
+// loadFutureFuelTreatmentLayer('fuel_treatments.geojson', 'Fuel Treatment Areas');
+//
+// Example:
+// loadFutureFuelTreatmentLayer('chipping_program_year_1.geojson', 'Chipping Program Year 1');
 
-  projectMarkersLayer.clearLayers();
-  const projectList = document.getElementById('projectList');
-  projectList.innerHTML = '';
+async function loadFutureFuelTreatmentLayer(fileName, layerName) {
+  try {
+    const response = await fetch(fileName);
 
-  const filtered = allProjectFeatures.filter(feature => {
-    const p = feature.properties || {};
-    const programMatch = programValue === 'All' || p.program === programValue;
-    const statusMatch = statusValue === 'All' || p.status === statusValue;
-    return programMatch && statusMatch;
-  });
-
-  filtered.forEach(feature => {
-    if (!feature.geometry || feature.geometry.type !== 'Point') return;
-
-    const [lng, lat] = feature.geometry.coordinates;
-    const p = feature.properties || {};
-
-    const marker = L.circleMarker([lat, lng], {
-      radius: 7,
-      color: '#1f2937',
-      weight: 1,
-      fillColor: getProjectColor(p.program),
-      fillOpacity: 0.9
-    });
-
-    marker.bindPopup(`
-      <strong>${p.name || 'Unnamed Project'}</strong><br>
-      <b>Program:</b> ${p.program || ''}<br>
-      <b>Status:</b> ${p.status || ''}<br>
-      <b>Location:</b> ${p.location || ''}<br>
-      <b>Description:</b> ${p.description || ''}
-    `);
-
-    projectMarkersLayer.addLayer(marker);
-
-    const li = document.createElement('li');
-    li.innerHTML = `<strong>${p.name || 'Unnamed Project'}</strong> — ${p.program || ''} — ${p.status || ''}`;
-    projectList.appendChild(li);
-  });
-}
-
-// -------------------------
-// COUNTY BOUNDARY
-// -------------------------
-async function loadCountyBoundary() {
-  const response = await fetch('sb_county_boundary.geojson');
-  const data = await response.json();
-
-  countyBoundaryLayer = L.geoJSON(data, {
-    style: {
-      color: '#1d4ed8',
-      weight: 3,
-      opacity: 0.95,
-      fill: false
+    if (!response.ok) {
+      throw new Error(`Unable to load ${layerName} from ${fileName}`);
     }
-  }).addTo(map);
 
-  map.fitBounds(countyBoundaryLayer.getBounds(), { padding: [20, 20] });
-}
+    const data = await response.json();
 
-// -------------------------
-// FUEL TREATMENT POLYGONS
-// -------------------------
-async function loadFuelTreatments() {
-  const response = await fetch('fuel_treatments.geojson');
-  const data = await response.json();
+    const layer = L.geoJSON(data, {
+      style: function () {
+        return {
+          color: '#0f766e',
+          weight: 2,
+          fillColor: '#14b8a6',
+          fillOpacity: 0.25
+        };
+      },
 
-  fuelTreatmentLayer = L.geoJSON(data, {
-    style: function(feature) {
-      const p = feature.properties || {};
-      const type = (p.treatment_type || p.type || '').toLowerCase();
+      pointToLayer: function (feature, latlng) {
+        return L.circleMarker(latlng, {
+          radius: 7,
+          color: '#0f766e',
+          weight: 2,
+          fillColor: '#14b8a6',
+          fillOpacity: 0.85
+        });
+      },
 
-      let fillColor = '#f59e0b';
+      onEachFeature: function (feature, layer) {
+        const props = feature.properties || {};
 
-      if (type.includes('chipping')) fillColor = '#2563eb';
-      else if (type.includes('grazing')) fillColor = '#16a34a';
-      else if (type.includes('mastication')) fillColor = '#b45309';
-      else if (type.includes('burn')) fillColor = '#dc2626';
+        const name =
+          props.name ||
+          props.project_name ||
+          props.treatment_name ||
+          props.Name ||
+          props.PROJECT ||
+          props.PROJECT_NAME ||
+          layerName;
 
-      return {
-        color: '#92400e',
-        weight: 1.2,
-        fillColor: fillColor,
-        fillOpacity: 0.35
-      };
-    },
-    onEachFeature: function(feature, layer) {
-      const p = feature.properties || {};
+        const type =
+          props.treatment_type ||
+          props.type ||
+          props.Type ||
+          props.TREATMENT_TYPE ||
+          '';
 
-      layer.bindPopup(`
-        <strong>${p.name || p.project_name || p.treatment_name || 'Fuel Treatment Area'}</strong><br>
-        <b>Type:</b> ${p.treatment_type || p.type || ''}<br>
-        <b>Status:</b> ${p.status || ''}<br>
-        <b>Acres:</b> ${p.acres || ''}<br>
-        <b>Year:</b> ${p.year || ''}<br>
-        <b>Description:</b> ${p.description || ''}
-      `);
-    }
-  }).addTo(map);
-}
+        const status =
+          props.status ||
+          props.Status ||
+          props.STATUS ||
+          '';
 
-// -------------------------
-// MONTECITO FIREWISE POINTS
-// -------------------------
-async function loadMontecitoFirewisePoints() {
-  const response = await fetch('montecito_firewise_points.geojson');
-  const data = await response.json();
+        const acres =
+          props.acres ||
+          props.Acres ||
+          props.ACRES ||
+          '';
 
-  montecitoFirewiseLayer = L.geoJSON(data, {
-    pointToLayer: function(feature, latlng) {
-      return L.circleMarker(latlng, {
-        radius: 8,
-        color: '#111827',
-        weight: 1,
-        fillColor: '#ec4899',
-        fillOpacity: 0.9
-      });
-    },
-    onEachFeature: function(feature, layer) {
-      const p = feature.properties || {};
+        const year =
+          props.year ||
+          props.Year ||
+          props.YEAR ||
+          '';
 
-      layer.bindPopup(`
-        <strong>${p.PLACE_NAME || 'Montecito Firewise'}</strong>
-      `);
+        const description =
+          props.description ||
+          props.Description ||
+          props.DESCRIPTION ||
+          '';
 
-      layer.bindTooltip(p.PLACE_NAME || 'Montecito Firewise', {
-        permanent: true,
-        direction: 'top',
-        offset: [0, -10],
-        className: 'point-label'
+        layer.bindPopup(`
+          <strong>${name}</strong><br>
+          ${type ? `<b>Type:</b> ${type}<br>` : ''}
+          ${status ? `<b>Status:</b> ${status}<br>` : ''}
+          ${acres ? `<b>Acres:</b> ${acres}<br>` : ''}
+          ${year ? `<b>Year:</b> ${year}<br>` : ''}
+          ${description ? `<b>Description:</b> ${description}<br>` : ''}
+        `);
+      }
+    }).addTo(map);
+
+    if (layer.getBounds && layer.getBounds().isValid()) {
+      map.fitBounds(layer.getBounds(), {
+        padding: [30, 30],
+        maxZoom: 13
       });
     }
-  }).addTo(map);
-}
 
-// -------------------------
-// LAYER CONTROL
-// -------------------------
-function addLayerControl() {
-  if (layerControl) {
-    map.removeControl(layerControl);
+    return layer;
+  } catch (error) {
+    console.warn(`Could not load ${layerName}:`, error);
+    return null;
   }
-
-  const overlayMaps = {
-    "Project Points": projectMarkersLayer,
-    "Santa Barbara County Boundary": countyBoundaryLayer,
-    "Fuel Treatment Areas": fuelTreatmentLayer,
-    "Montecito Firewise Points": montecitoFirewiseLayer
-  };
-
-  layerControl = L.control.layers(null, overlayMaps, {
-    collapsed: false
-  }).addTo(map);
 }
-
-// -------------------------
-// FILTER EVENTS
-// -------------------------
-document.getElementById('programFilter').addEventListener('change', renderProjects);
-document.getElementById('statusFilter').addEventListener('change', renderProjects);
-
-initMap();
