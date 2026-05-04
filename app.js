@@ -1,23 +1,23 @@
 // -----------------------------------------------------------------------------
 // MAIN MAP PAGE
 // Santa Barbara County Fire Safe Council Fuel Treatment Map
+// Converts each feature into a clickable point marker on the main map
 // -----------------------------------------------------------------------------
 
 const GEOJSON_FILE = 'Fuel_Treatment_FeaturesToJSO.geojson';
-const GEOJSON_LAYER_NAME = 'Fuel Treatment Areas';
+const GEOJSON_LAYER_NAME = 'Fuel Treatment Points';
 
 // Initialize map centered on Santa Barbara County
 const map = L.map('map').setView([34.7, -120.0], 9);
 
-// Esri World Topographic basemap
-L.tileLayer(
+// Basemaps
+const topoBasemap = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
   {
     attribution: 'Tiles &copy; Esri'
   }
-).addTo(map);
+);
 
-// Optional imagery basemap
 const imageryBasemap = L.tileLayer(
   'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
   {
@@ -25,11 +25,13 @@ const imageryBasemap = L.tileLayer(
   }
 );
 
-let fuelTreatmentLayer;
+topoBasemap.addTo(map);
+
+let fuelTreatmentPointLayer;
 let layerControl;
 
 // -----------------------------------------------------------------------------
-// Helper: Safely get a useful value from multiple possible property names
+// Helper: safely read attributes from different possible field names
 // -----------------------------------------------------------------------------
 
 function getProperty(props, names, fallback = '') {
@@ -46,7 +48,7 @@ function getProperty(props, names, fallback = '') {
 }
 
 // -----------------------------------------------------------------------------
-// Helper: Build a stable feature ID for detail links
+// Helper: create a stable ID for each feature
 // -----------------------------------------------------------------------------
 
 function getFeatureId(feature, index) {
@@ -68,7 +70,7 @@ function getFeatureId(feature, index) {
 }
 
 // -----------------------------------------------------------------------------
-// Helper: Get display name
+// Helper: get a display name
 // -----------------------------------------------------------------------------
 
 function getFeatureName(feature, index) {
@@ -94,10 +96,42 @@ function getFeatureName(feature, index) {
 }
 
 // -----------------------------------------------------------------------------
-// Helper: Style fuel treatment polygons
+// Helper: convert any feature into a representative point location
 // -----------------------------------------------------------------------------
 
-function getFuelTreatmentStyle(feature) {
+function getFeatureCenterLatLng(feature) {
+  const geometry = feature.geometry;
+
+  if (!geometry) return null;
+
+  if (geometry.type === 'Point') {
+    const [lng, lat] = geometry.coordinates;
+    return L.latLng(lat, lng);
+  }
+
+  if (geometry.type === 'MultiPoint') {
+    const firstPoint = geometry.coordinates[0];
+    if (!firstPoint) return null;
+    return L.latLng(firstPoint[1], firstPoint[0]);
+  }
+
+  // For LineString, MultiLineString, Polygon, MultiPolygon:
+  // use the center of the feature bounds
+  const tempLayer = L.geoJSON(feature);
+  const bounds = tempLayer.getBounds();
+
+  if (bounds.isValid()) {
+    return bounds.getCenter();
+  }
+
+  return null;
+}
+
+// -----------------------------------------------------------------------------
+// Helper: marker color by treatment type
+// -----------------------------------------------------------------------------
+
+function getMarkerColor(feature) {
   const props = feature.properties || {};
 
   const type = String(
@@ -111,36 +145,21 @@ function getFuelTreatmentStyle(feature) {
     ])
   ).toLowerCase();
 
-  let fillColor = '#14b8a6';
+  if (type.includes('chipping')) return '#2563eb';
+  if (type.includes('grazing')) return '#16a34a';
+  if (type.includes('mastication')) return '#b45309';
+  if (type.includes('burn')) return '#dc2626';
+  if (type.includes('fuel')) return '#f59e0b';
 
-  if (type.includes('chipping')) {
-    fillColor = '#2563eb';
-  } else if (type.includes('grazing')) {
-    fillColor = '#16a34a';
-  } else if (type.includes('mastication')) {
-    fillColor = '#b45309';
-  } else if (type.includes('burn')) {
-    fillColor = '#dc2626';
-  } else if (type.includes('fuel')) {
-    fillColor = '#f59e0b';
-  }
-
-  return {
-    color: '#0f172a',
-    weight: 1.5,
-    opacity: 0.9,
-    fillColor: fillColor,
-    fillOpacity: 0.35
-  };
+  return '#14b8a6';
 }
 
 // -----------------------------------------------------------------------------
-// Helper: Create popup content
+// Helper: popup content
 // -----------------------------------------------------------------------------
 
 function buildPopupContent(feature, index) {
   const props = feature.properties || {};
-
   const featureId = encodeURIComponent(getFeatureId(feature, index));
   const name = getFeatureName(feature, index);
 
@@ -165,9 +184,7 @@ function buildPopupContent(feature, index) {
     'acres',
     'Acres',
     'ACRES',
-    'GIS_ACRES',
-    'Shape_Area',
-    'shape_area'
+    'GIS_ACRES'
   ]);
 
   const year = getProperty(props, [
@@ -189,6 +206,17 @@ function buildPopupContent(feature, index) {
     'Organization'
   ]);
 
+  const description = getProperty(props, [
+    'description',
+    'Description',
+    'DESCRIPTION',
+    'notes',
+    'Notes',
+    'NOTES',
+    'summary',
+    'Summary'
+  ]);
+
   return `
     <div class="popup-content">
       <strong>${name}</strong><br>
@@ -197,6 +225,7 @@ function buildPopupContent(feature, index) {
       ${acres ? `<b>Acres:</b> ${acres}<br>` : ''}
       ${year ? `<b>Year:</b> ${year}<br>` : ''}
       ${lead ? `<b>Lead:</b> ${lead}<br>` : ''}
+      ${description ? `<b>Description:</b> ${description}<br>` : ''}
       <br>
       <a class="popup-detail-link" href="project.html?id=${featureId}">
         View Project Details
@@ -206,10 +235,10 @@ function buildPopupContent(feature, index) {
 }
 
 // -----------------------------------------------------------------------------
-// Load fuel treatment GeoJSON
+// Load GeoJSON and convert features to point markers
 // -----------------------------------------------------------------------------
 
-async function loadFuelTreatmentLayer() {
+async function loadFuelTreatmentPoints() {
   try {
     const response = await fetch(GEOJSON_FILE);
 
@@ -218,44 +247,52 @@ async function loadFuelTreatmentLayer() {
     }
 
     const data = await response.json();
+    const features = data.features || [];
 
-    fuelTreatmentLayer = L.geoJSON(data, {
-      style: getFuelTreatmentStyle,
+    fuelTreatmentPointLayer = L.layerGroup();
 
-      pointToLayer: function (feature, latlng) {
-        return L.circleMarker(latlng, {
-          radius: 7,
-          color: '#0f172a',
-          weight: 1.5,
-          fillColor: '#14b8a6',
-          fillOpacity: 0.85
-        });
-      },
+    const allLatLngs = [];
 
-      onEachFeature: function (feature, layer) {
-        const index = data.features.indexOf(feature);
-        layer.bindPopup(buildPopupContent(feature, index));
-      }
-    }).addTo(map);
+    features.forEach((feature, index) => {
+      const latlng = getFeatureCenterLatLng(feature);
 
-    if (fuelTreatmentLayer.getBounds().isValid()) {
-      map.fitBounds(fuelTreatmentLayer.getBounds(), {
+      if (!latlng) return;
+
+      allLatLngs.push(latlng);
+
+      const marker = L.circleMarker(latlng, {
+        radius: 7,
+        color: '#0f172a',
+        weight: 1.5,
+        fillColor: getMarkerColor(feature),
+        fillOpacity: 0.9
+      });
+
+      marker.bindPopup(buildPopupContent(feature, index));
+      fuelTreatmentPointLayer.addLayer(marker);
+    });
+
+    fuelTreatmentPointLayer.addTo(map);
+
+    if (allLatLngs.length > 0) {
+      const bounds = L.latLngBounds(allLatLngs);
+      map.fitBounds(bounds, {
         padding: [30, 30],
-        maxZoom: 13
+        maxZoom: 11
       });
     }
 
     addLayerControl();
-    populateFeatureList(data.features || []);
+    populateFeatureList(features);
   } catch (error) {
-    console.warn('Could not load fuel treatment layer:', error);
+    console.warn('Could not load fuel treatment points:', error);
 
     const projectList = document.getElementById('projectList');
     if (projectList) {
       projectList.innerHTML = `
         <li>
-          Fuel treatment GeoJSON could not be loaded. 
-          Check that ${GEOJSON_FILE} is uploaded to the repository root.
+          Fuel treatment GeoJSON could not be loaded. Check that
+          ${GEOJSON_FILE} is in the repository root.
         </li>
       `;
     }
@@ -267,13 +304,17 @@ async function loadFuelTreatmentLayer() {
 // -----------------------------------------------------------------------------
 
 function addLayerControl() {
+  if (layerControl) {
+    map.removeControl(layerControl);
+  }
+
   const baseMaps = {
-    'Esri Topographic': map._layers[Object.keys(map._layers)[0]],
+    'Esri Topographic': topoBasemap,
     'Esri Imagery': imageryBasemap
   };
 
   const overlayMaps = {
-    [GEOJSON_LAYER_NAME]: fuelTreatmentLayer
+    [GEOJSON_LAYER_NAME]: fuelTreatmentPointLayer
   };
 
   layerControl = L.control.layers(baseMaps, overlayMaps, {
@@ -282,18 +323,17 @@ function addLayerControl() {
 }
 
 // -----------------------------------------------------------------------------
-// Populate list below map
+// Populate list below the map
 // -----------------------------------------------------------------------------
 
 function populateFeatureList(features) {
   const projectList = document.getElementById('projectList');
-
   if (!projectList) return;
 
   projectList.innerHTML = '';
 
   if (!features.length) {
-    projectList.innerHTML = '<li>No fuel treatment areas found.</li>';
+    projectList.innerHTML = '<li>No fuel treatment features found.</li>';
     return;
   }
 
@@ -334,4 +374,4 @@ function populateFeatureList(features) {
 // Start app
 // -----------------------------------------------------------------------------
 
-loadFuelTreatmentLayer();
+loadFuelTreatmentPoints();
