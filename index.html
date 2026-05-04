@@ -3,55 +3,61 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-
-  <title>Santa Barbara County Fire Safe Council | Fuel Treatment Map</title>
+  <title>Wildfire Mitigations Map | Santa Barbara County Fire Safe Council</title>
 
   <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
   <link rel="stylesheet" href="styles.css" />
 </head>
-
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <h1>Santa Barbara County Fire Safe Council</h1>
-      <p>Fuel Treatment Project Map</p>
-    </div>
-
-    <nav>
-      <a href="#map">Map</a>
-      <a href="#project-list">Fuel Treatment List</a>
-      <a href="#about">About</a>
-    </nav>
-  </header>
-
   <main class="page">
-    <section class="intro">
-      <h2>Fuel Treatment Map</h2>
-      <p>
-        This public-facing map displays fuel treatment and wildfire resilience project areas
-        in Santa Barbara County.
+    <section class="hero">
+      <h1>WILDFIRE MITIGATIONS MAP</h1>
+
+      <p class="hero-note">
+        This is a demo map and an ongoing project for the Santa Barbara County Fire Safe Council.
+        The site is still being developed, and project details, status fields, and spatial data may
+        be incomplete while content is actively being populated and refined.
       </p>
+    </section>
+
+    <section class="filter-panel">
+      <div class="filter-group">
+        <label for="statusFilter">Filter Projects by:</label>
+        <select id="statusFilter">
+          <option value="All">All Projects</option>
+          <option value="Potential/Ongoing">Potential/Ongoing</option>
+          <option value="Current">Current</option>
+          <option value="Completed">Completed</option>
+        </select>
+      </div>
+
+      <div class="status-legend">
+        <span class="legend-item">
+          <span class="legend-pin legend-potential"></span>
+          Potential/Ongoing
+        </span>
+        <span class="legend-item">
+          <span class="legend-pin legend-current"></span>
+          Current
+        </span>
+        <span class="legend-item">
+          <span class="legend-pin legend-completed"></span>
+          Completed
+        </span>
+      </div>
     </section>
 
     <section class="map-wrap">
       <div id="map"></div>
     </section>
 
-    <section id="project-list" class="project-list-wrap">
-      <h3>Fuel Treatment Areas</h3>
-      <p>
-        Select a feature on the map or choose a project below to view more details.
-      </p>
-      <ul id="projectList">
-        <li>Loading fuel treatment areas...</li>
-      </ul>
-    </section>
-
     <section id="about" class="about-wrap">
-      <h3>About</h3>
+      <h2>About</h2>
       <p>
-        This map is intended to help communicate wildfire mitigation, fuel treatment,
-        and community resilience work across Santa Barbara County.
+        This demo map is being developed to help communicate wildfire mitigation,
+        fuel treatment, roadside clearance, and community resilience projects across
+        Santa Barbara County. Project information and spatial data are still being
+        reviewed and refined.
       </p>
     </section>
   </main>
