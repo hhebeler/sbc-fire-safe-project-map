@@ -1,13 +1,15 @@
 // -----------------------------------------------------------------------------
-// MAIN MAP PAGE
-// Santa Barbara County Fire Safe Council Fuel Treatment Map
-// Converts each feature into a clickable point marker on the main map
+// Wildfire Mitigations Map
+// Santa Barbara County Fire Safe Council
 // -----------------------------------------------------------------------------
 
 const GEOJSON_FILE = 'Fuel_Treatment_FeaturesToJSO.geojson';
 const GEOJSON_LAYER_NAME = 'Fuel Treatment Points';
 
-// Initialize map centered on Santa Barbara County
+const COUNTY_BOUNDARY_FILE = 'sb_county_boundary.geojson';
+const COUNTY_BOUNDARY_LAYER_NAME = 'Santa Barbara County Boundary';
+
+// Initialize map
 const map = L.map('map').setView([34.7, -120.0], 9);
 
 // Basemaps
@@ -27,11 +29,38 @@ const imageryBasemap = L.tileLayer(
 
 topoBasemap.addTo(map);
 
+// Layer references
+let countyBoundaryLayer;
 let fuelTreatmentPointLayer;
 let layerControl;
 
+// Store features for filtering
+let allFeatures = [];
+
 // -----------------------------------------------------------------------------
-// Helper: safely read attributes from different possible field names
+// Pin icons
+// -----------------------------------------------------------------------------
+
+function makePinIcon(fillColor) {
+  return L.divIcon({
+    className: 'fuel-treatment-pin-wrapper',
+    html: `
+      <div class="fuel-treatment-pin" style="background:${fillColor};">
+        <div class="fuel-treatment-pin-dot"></div>
+      </div>
+    `,
+    iconSize: [32, 42],
+    iconAnchor: [16, 42],
+    popupAnchor: [0, -38]
+  });
+}
+
+const iconPotential = makePinIcon('#f4b000');
+const iconCurrent = makePinIcon('#2b7de9');
+const iconCompleted = makePinIcon('#5b4bc4');
+
+// -----------------------------------------------------------------------------
+// Helpers
 // -----------------------------------------------------------------------------
 
 function getProperty(props, names, fallback = '') {
@@ -46,10 +75,6 @@ function getProperty(props, names, fallback = '') {
   }
   return fallback;
 }
-
-// -----------------------------------------------------------------------------
-// Helper: create a stable ID for each feature
-// -----------------------------------------------------------------------------
 
 function getFeatureId(feature, index) {
   const props = feature.properties || {};
@@ -69,10 +94,6 @@ function getFeatureId(feature, index) {
   );
 }
 
-// -----------------------------------------------------------------------------
-// Helper: get a display name
-// -----------------------------------------------------------------------------
-
 function getFeatureName(feature, index) {
   const props = feature.properties || {};
 
@@ -91,13 +112,9 @@ function getFeatureName(feature, index) {
       'PROJECT',
       'Project'
     ],
-    `Fuel Treatment Area ${index + 1}`
+    `Fuel Treatment Project ${index + 1}`
   );
 }
-
-// -----------------------------------------------------------------------------
-// Helper: convert any feature into a representative point location
-// -----------------------------------------------------------------------------
 
 function getFeatureCenterLatLng(feature) {
   const geometry = feature.geometry;
@@ -115,8 +132,8 @@ function getFeatureCenterLatLng(feature) {
     return L.latLng(firstPoint[1], firstPoint[0]);
   }
 
-  // For LineString, MultiLineString, Polygon, MultiPolygon:
-  // use the center of the feature bounds
+  // For LineString, MultiLineString, Polygon, and MultiPolygon,
+  // use the center of the feature bounds.
   const tempLayer = L.geoJSON(feature);
   const bounds = tempLayer.getBounds();
 
@@ -128,114 +145,136 @@ function getFeatureCenterLatLng(feature) {
 }
 
 // -----------------------------------------------------------------------------
-// Helper: marker color by treatment type
+// Status/category handling
 // -----------------------------------------------------------------------------
 
-function getMarkerColor(feature) {
+function getProjectCategory(feature) {
   const props = feature.properties || {};
 
-  const type = String(
-    getProperty(props, [
-      'treatment_type',
-      'Treatment_Type',
-      'TREATMENT_TYPE',
-      'type',
-      'Type',
-      'TYPE'
-    ])
+  const rawStatus = String(
+    getProperty(
+      props,
+      [
+        'status',
+        'Status',
+        'STATUS',
+        'project_stage',
+        'Project_Stage',
+        'PROJECT_STAGE',
+        'stage',
+        'Stage',
+        'STAGE'
+      ],
+      ''
+    )
   ).toLowerCase();
 
-  if (type.includes('chipping')) return '#2563eb';
-  if (type.includes('grazing')) return '#16a34a';
-  if (type.includes('mastication')) return '#b45309';
-  if (type.includes('burn')) return '#dc2626';
-  if (type.includes('fuel')) return '#f59e0b';
+  if (
+    rawStatus.includes('completed') ||
+    rawStatus.includes('complete') ||
+    rawStatus.includes('post-implementation') ||
+    rawStatus.includes('done') ||
+    rawStatus.includes('closed')
+  ) {
+    return 'Completed';
+  }
 
-  return '#14b8a6';
+  if (
+    rawStatus.includes('implementation') ||
+    rawStatus.includes('current') ||
+    rawStatus.includes('active') ||
+    rawStatus.includes('in progress') ||
+    rawStatus.includes('ongoing')
+  ) {
+    return 'Current';
+  }
+
+  if (
+    rawStatus.includes('planning') ||
+    rawStatus.includes('design') ||
+    rawStatus.includes('potential') ||
+    rawStatus.includes('proposed') ||
+    rawStatus.includes('forecast')
+  ) {
+    return 'Potential/Ongoing';
+  }
+
+  // Default bucket while your data is still being built out
+  return 'Potential/Ongoing';
+}
+
+function getMarkerIconForCategory(category) {
+  if (category === 'Current') return iconCurrent;
+  if (category === 'Completed') return iconCompleted;
+  return iconPotential;
 }
 
 // -----------------------------------------------------------------------------
-// Helper: popup content
+// Popup content
 // -----------------------------------------------------------------------------
 
 function buildPopupContent(feature, index) {
-  const props = feature.properties || {};
   const featureId = encodeURIComponent(getFeatureId(feature, index));
   const name = getFeatureName(feature, index);
-
-  const type = getProperty(props, [
-    'treatment_type',
-    'Treatment_Type',
-    'TREATMENT_TYPE',
-    'type',
-    'Type',
-    'TYPE'
-  ]);
-
-  const status = getProperty(props, [
-    'status',
-    'Status',
-    'STATUS',
-    'project_status',
-    'PROJECT_STATUS'
-  ]);
-
-  const acres = getProperty(props, [
-    'acres',
-    'Acres',
-    'ACRES',
-    'GIS_ACRES'
-  ]);
-
-  const year = getProperty(props, [
-    'year',
-    'Year',
-    'YEAR',
-    'project_year',
-    'PROJECT_YEAR'
-  ]);
-
-  const lead = getProperty(props, [
-    'lead',
-    'Lead',
-    'LEAD',
-    'lead_agency',
-    'Lead_Agency',
-    'LEAD_AGENCY',
-    'organization',
-    'Organization'
-  ]);
-
-  const description = getProperty(props, [
-    'description',
-    'Description',
-    'DESCRIPTION',
-    'notes',
-    'Notes',
-    'NOTES',
-    'summary',
-    'Summary'
-  ]);
+  const category = getProjectCategory(feature);
 
   return `
-    <div class="popup-content">
-      <strong>${name}</strong><br>
-      ${type ? `<b>Type:</b> ${type}<br>` : ''}
-      ${status ? `<b>Status:</b> ${status}<br>` : ''}
-      ${acres ? `<b>Acres:</b> ${acres}<br>` : ''}
-      ${year ? `<b>Year:</b> ${year}<br>` : ''}
-      ${lead ? `<b>Lead:</b> ${lead}<br>` : ''}
-      ${description ? `<b>Description:</b> ${description}<br>` : ''}
-      <br>
-      <a class="popup-detail-link" href="project.html?id=${featureId}">
-        View Project Details
-      </a>
+    <div class="project-popup">
+      <h3 class="project-popup-title">
+        <a href="project.html?id=${featureId}">${name}</a>
+      </h3>
+
+      <div class="project-popup-details">
+        <p><strong>Project Status:</strong> ${category}</p>
+        <p><strong>Duration:</strong> </p>
+        <p><strong>Lead Implementer:</strong> </p>
+        <p><strong>Focus Area:</strong> </p>
+        <p><strong>Goal:</strong> </p>
+        <p><strong>Strategy:</strong> </p>
+        <p><strong>Estimated Total Cost:</strong> </p>
+      </div>
+
+      <p class="project-popup-footer">
+        For project details, see the
+        <a href="project.html?id=${featureId}">Project Fact Sheet</a>
+      </p>
     </div>
   `;
 }
 
 // -----------------------------------------------------------------------------
-// Load GeoJSON and convert features to point markers
+// County boundary
+// -----------------------------------------------------------------------------
+
+async function loadCountyBoundary() {
+  try {
+    const response = await fetch(COUNTY_BOUNDARY_FILE);
+
+    if (!response.ok) {
+      throw new Error(`Unable to load ${COUNTY_BOUNDARY_FILE}`);
+    }
+
+    const data = await response.json();
+
+    countyBoundaryLayer = L.geoJSON(data, {
+      style: {
+        color: '#000000',
+        weight: 1,
+        opacity: 0.9,
+        fill: false
+      },
+      interactive: false
+    }).addTo(map);
+
+    return countyBoundaryLayer;
+  } catch (error) {
+    console.warn('Could not load Santa Barbara County boundary:', error);
+    return null;
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Load project points
 // -----------------------------------------------------------------------------
 
 async function loadFuelTreatmentPoints() {
@@ -247,56 +286,77 @@ async function loadFuelTreatmentPoints() {
     }
 
     const data = await response.json();
-    const features = data.features || [];
+    allFeatures = data.features || [];
 
-    fuelTreatmentPointLayer = L.layerGroup();
-
-    const allLatLngs = [];
-
-    features.forEach((feature, index) => {
-      const latlng = getFeatureCenterLatLng(feature);
-
-      if (!latlng) return;
-
-      allLatLngs.push(latlng);
-
-      const marker = L.circleMarker(latlng, {
-        radius: 7,
-        color: '#0f172a',
-        weight: 1.5,
-        fillColor: getMarkerColor(feature),
-        fillOpacity: 0.9
-      });
-
-      marker.bindPopup(buildPopupContent(feature, index));
-      fuelTreatmentPointLayer.addLayer(marker);
-    });
-
-    fuelTreatmentPointLayer.addTo(map);
-
-    if (allLatLngs.length > 0) {
-      const bounds = L.latLngBounds(allLatLngs);
-      map.fitBounds(bounds, {
-        padding: [30, 30],
-        maxZoom: 11
-      });
-    }
-
+    renderFilteredProjects();
     addLayerControl();
-    populateFeatureList(features);
   } catch (error) {
     console.warn('Could not load fuel treatment points:', error);
-
-    const projectList = document.getElementById('projectList');
-    if (projectList) {
-      projectList.innerHTML = `
-        <li>
-          Fuel treatment GeoJSON could not be loaded. Check that
-          ${GEOJSON_FILE} is in the repository root.
-        </li>
-      `;
-    }
   }
+}
+
+// -----------------------------------------------------------------------------
+// Render filtered projects
+// -----------------------------------------------------------------------------
+
+function renderFilteredProjects() {
+  const statusFilter = document.getElementById('statusFilter');
+  const filterValue = statusFilter ? statusFilter.value : 'All';
+
+  if (fuelTreatmentPointLayer) {
+    map.removeLayer(fuelTreatmentPointLayer);
+  }
+
+  fuelTreatmentPointLayer = L.layerGroup();
+
+  const filteredFeatures = allFeatures.filter((feature) => {
+    const category = getProjectCategory(feature);
+    return filterValue === 'All' || category === filterValue;
+  });
+
+  const allLatLngs = [];
+
+  filteredFeatures.forEach((feature, index) => {
+    const latlng = getFeatureCenterLatLng(feature);
+    if (!latlng) return;
+
+    allLatLngs.push(latlng);
+
+    const category = getProjectCategory(feature);
+    const marker = L.marker(latlng, {
+      icon: getMarkerIconForCategory(category),
+      title: getFeatureName(feature, index)
+    });
+
+    marker.bindPopup(buildPopupContent(feature, index), {
+      maxWidth: 620,
+      minWidth: 420,
+      className: 'project-popup-container'
+    });
+
+    fuelTreatmentPointLayer.addLayer(marker);
+  });
+
+  fuelTreatmentPointLayer.addTo(map);
+
+  if (allLatLngs.length > 0) {
+    const bounds = L.latLngBounds(allLatLngs);
+    map.fitBounds(bounds, {
+      padding: [30, 30],
+      maxZoom: 11
+    });
+  }
+
+  addLayerControl();
+}
+
+// -----------------------------------------------------------------------------
+// Project list intentionally disabled on main page
+// -----------------------------------------------------------------------------
+
+function populateFeatureList(features) {
+  // Project list intentionally disabled.
+  // Users access project details by clicking map markers.
 }
 
 // -----------------------------------------------------------------------------
@@ -313,9 +373,15 @@ function addLayerControl() {
     'Esri Imagery': imageryBasemap
   };
 
-  const overlayMaps = {
-    [GEOJSON_LAYER_NAME]: fuelTreatmentPointLayer
-  };
+  const overlayMaps = {};
+
+  if (countyBoundaryLayer) {
+    overlayMaps[COUNTY_BOUNDARY_LAYER_NAME] = countyBoundaryLayer;
+  }
+
+  if (fuelTreatmentPointLayer) {
+    overlayMaps[GEOJSON_LAYER_NAME] = fuelTreatmentPointLayer;
+  }
 
   layerControl = L.control.layers(baseMaps, overlayMaps, {
     collapsed: false
@@ -323,55 +389,24 @@ function addLayerControl() {
 }
 
 // -----------------------------------------------------------------------------
-// Populate list below the map
+// Event listeners
 // -----------------------------------------------------------------------------
 
-function populateFeatureList(features) {
-  const projectList = document.getElementById('projectList');
-  if (!projectList) return;
+document.addEventListener('DOMContentLoaded', () => {
+  const statusFilter = document.getElementById('statusFilter');
 
-  projectList.innerHTML = '';
-
-  if (!features.length) {
-    projectList.innerHTML = '<li>No fuel treatment features found.</li>';
-    return;
+  if (statusFilter) {
+    statusFilter.addEventListener('change', renderFilteredProjects);
   }
+});
 
-  features.forEach((feature, index) => {
-    const props = feature.properties || {};
-    const featureId = encodeURIComponent(getFeatureId(feature, index));
-    const name = getFeatureName(feature, index);
+// -----------------------------------------------------------------------------
+// Init
+// -----------------------------------------------------------------------------
 
-    const type = getProperty(props, [
-      'treatment_type',
-      'Treatment_Type',
-      'TREATMENT_TYPE',
-      'type',
-      'Type',
-      'TYPE'
-    ]);
-
-    const status = getProperty(props, [
-      'status',
-      'Status',
-      'STATUS'
-    ]);
-
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <strong>${name}</strong>
-      ${type ? ` — ${type}` : ''}
-      ${status ? ` — ${status}` : ''}
-      <br>
-      <a href="project.html?id=${featureId}">View Project Details</a>
-    `;
-
-    projectList.appendChild(li);
-  });
+async function initMap() {
+  await loadCountyBoundary();
+  await loadFuelTreatmentPoints();
 }
 
-// -----------------------------------------------------------------------------
-// Start app
-// -----------------------------------------------------------------------------
-
-loadFuelTreatmentPoints();
+initMap();
