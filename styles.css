@@ -220,3 +220,87 @@ body {
     width: 140px;
   }
 }
+/* -------------------------------------------------------------------------- */
+/* ProjectFirma-style map pin markers */
+/* -------------------------------------------------------------------------- */
+
+.fuel-treatment-pin-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.fuel-treatment-pin {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #111827;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.fuel-treatment-pin-dot {
+  width: 10px;
+  height: 10px;
+  background: #111827;
+  border-radius: 50%;
+  position: absolute;
+  top: 7px;
+  left: 7px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Project-style popup */
+/* -------------------------------------------------------------------------- */
+
+.project-popup-container .leaflet-popup-content-wrapper {
+  border-radius: 18px;
+  padding: 18px 22px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.28);
+}
+
+.project-popup-container .leaflet-popup-content {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.project-popup {
+  min-width: 390px;
+  max-width: 560px;
+}
+
+.project-popup-title {
+  margin: 0 0 14px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #c7c7c7;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.project-popup-title a {
+  color: #0077a8;
+  font-weight: 800;
+  text-decoration: underline;
+}
+
+.project-popup-details p {
+  margin: 4px 0;
+  color: #333333;
+}
+
+.project-popup-details strong {
+  font-weight: 800;
+}
+
+.project-popup-footer {
+  margin: 18px 0 0;
+  text-align: center;
+  color: #333333;
+}
+
+.project-popup-footer a {
+  color: #0077a8;
+  font-weight: 700;
+  text-decoration: underline;
+}
