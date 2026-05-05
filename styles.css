@@ -1,102 +1,129 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   color: #1f2937;
   background: #f8fafc;
 }
 
-.topbar {
-  background: #ffffff;
-  border-bottom: 1px solid #dbe3ea;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 24px;
-  flex-wrap: wrap;
-}
-
-.topbar h1 {
-  margin: 0;
-  font-size: 1.4rem;
-}
-
-.topbar p {
-  margin: 4px 0 0;
-  color: #6b7280;
-}
-
-.topbar nav a {
-  margin-left: 16px;
-  text-decoration: none;
-  color: #1d4ed8;
-  font-weight: 600;
-}
+/* -------------------------------------------------------------------------- */
+/* Page layout */
+/* -------------------------------------------------------------------------- */
 
 .page {
-  max-width: 1200px;
+  max-width: 1500px;
   margin: 0 auto;
   padding: 20px;
 }
 
-.intro {
-  margin-bottom: 16px;
+.hero {
+  margin-bottom: 18px;
 }
 
-.table-link {
-  display: inline-block;
-  margin-bottom: 8px;
-  color: #1d4ed8;
-  text-decoration: none;
+.hero h1 {
+  margin: 0 0 10px;
+  font-size: 3.5rem;
+  line-height: 1;
+  font-weight: 900;
+  letter-spacing: 0.02em;
+  color: #24384a;
 }
 
-.filters {
-  background: white;
+.hero-note {
+  margin: 0;
+  font-size: 1.05rem;
+  line-height: 1.4;
+  font-style: italic;
+  font-weight: 700;
+  color: #334155;
+  max-width: 1300px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Filter panel */
+/* -------------------------------------------------------------------------- */
+
+.filter-panel {
+  background: #ffffff;
   border: 1px solid #dbe3ea;
-  border-radius: 10px;
-  padding: 12px;
-  margin-bottom: 16px;
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.filter-group {
   display: flex;
-  gap: 20px;
+  align-items: center;
   flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 14px;
 }
 
-.filters label {
-  font-weight: 600;
+.filter-group label {
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #111827;
 }
 
-.filters select {
-  margin-left: 8px;
-  padding: 6px 8px;
+.filter-group select {
+  min-width: 260px;
+  padding: 10px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  background: #ffffff;
 }
+
+.status-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 24px;
+  align-items: center;
+}
+
+.legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #111827;
+}
+
+.legend-pin {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: inline-block;
+  border: 2px solid #111827;
+}
+
+.legend-potential {
+  background: #f4b000;
+}
+
+.legend-current {
+  background: #2b7de9;
+}
+
+.legend-completed {
+  background: #5b4bc4;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Map */
+/* -------------------------------------------------------------------------- */
 
 .map-wrap {
-  background: white;
+  background: #ffffff;
   border: 1px solid #dbe3ea;
-  border-radius: 10px;
+  border-radius: 12px;
   padding: 12px;
 }
 
 #map {
-  height: 600px;
+  height: 640px;
   width: 100%;
-  border-radius: 8px;
-}
-
-.project-list-wrap,
-.about-wrap {
-  margin-top: 20px;
-  background: white;
-  border: 1px solid #dbe3ea;
   border-radius: 10px;
-  padding: 16px;
-}
-
-#projectList {
-  padding-left: 20px;
-}
-
-#projectList li {
-  margin-bottom: 10px;
 }
 
 .leaflet-control-layers {
@@ -104,31 +131,118 @@ body {
   border-radius: 8px;
 }
 
-.point-label {
-  background: rgba(255, 255, 255, 0.92);
-  border: 1px solid #cbd5e1;
-  border-radius: 4px;
-  color: #111827;
-  font-size: 12px;
-  font-weight: 600;
-  padding: 2px 6px;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.15);
-}
-.popup-detail-link {
-  display: inline-block;
-  margin-top: 8px;
-  color: #1d4ed8;
-  font-weight: 700;
-  text-decoration: none;
+/* -------------------------------------------------------------------------- */
+/* About section */
+/* -------------------------------------------------------------------------- */
+
+.about-wrap {
+  margin-top: 20px;
+  background: #ffffff;
+  border: 1px solid #dbe3ea;
+  border-radius: 12px;
+  padding: 18px;
 }
 
-.popup-detail-link:hover {
+.about-wrap h2 {
+  margin-top: 0;
+  color: #24384a;
+}
+
+.about-wrap p {
+  margin-bottom: 0;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: #374151;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Smaller ProjectFirma-style map pin markers */
+/* -------------------------------------------------------------------------- */
+
+.fuel-treatment-pin-wrapper {
+  background: transparent;
+  border: none;
+}
+
+.fuel-treatment-pin {
+  width: 15px;
+  height: 15px;
+  border: 2px solid #111827;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.35);
+  position: relative;
+}
+
+.fuel-treatment-pin-dot {
+  width: 5px;
+  height: 5px;
+  background: #111827;
+  border-radius: 50%;
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Project-style popup */
+/* -------------------------------------------------------------------------- */
+
+.project-popup-container .leaflet-popup-content-wrapper {
+  border-radius: 18px;
+  padding: 18px 22px;
+  box-shadow: 0 6px 24px rgba(15, 23, 42, 0.28);
+}
+
+.project-popup-container .leaflet-popup-content {
+  margin: 0;
+  font-size: 17px;
+  line-height: 1.35;
+}
+
+.project-popup {
+  min-width: 390px;
+  max-width: 560px;
+}
+
+.project-popup-title {
+  margin: 0 0 14px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid #c7c7c7;
+  font-size: 1.25rem;
+  line-height: 1.25;
+}
+
+.project-popup-title a {
+  color: #0077a8;
+  font-weight: 800;
   text-decoration: underline;
 }
 
-.popup-content {
-  min-width: 190px;
+.project-popup-details p {
+  margin: 4px 0;
+  color: #333333;
 }
+
+.project-popup-details strong {
+  font-weight: 800;
+}
+
+.project-popup-footer {
+  margin: 18px 0 0;
+  text-align: center;
+  color: #333333;
+}
+
+.project-popup-footer a {
+  color: #0077a8;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+/* -------------------------------------------------------------------------- */
+/* Detail page */
+/* -------------------------------------------------------------------------- */
 
 .back-link {
   display: inline-block;
@@ -203,13 +317,52 @@ body {
   color: #374151;
 }
 
-@media (max-width: 700px) {
-  .detail-grid {
-    grid-template-columns: 1fr;
+/* -------------------------------------------------------------------------- */
+/* Mobile */
+/* -------------------------------------------------------------------------- */
+
+@media (max-width: 900px) {
+  .page {
+    padding: 14px;
+  }
+
+  .hero h1 {
+    font-size: 2.4rem;
+  }
+
+  .hero-note {
+    font-size: 0.95rem;
+  }
+
+  .filter-group {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-group select {
+    width: 100%;
+    min-width: unset;
   }
 
   #map {
-    height: 500px;
+    height: 520px;
+  }
+
+  .project-popup {
+    min-width: 240px;
+    max-width: 300px;
+  }
+
+  .project-popup-container .leaflet-popup-content {
+    font-size: 14px;
+  }
+
+  .project-popup-container .leaflet-popup-content-wrapper {
+    padding: 14px;
+  }
+
+  .detail-grid {
+    grid-template-columns: 1fr;
   }
 
   #detailMap {
@@ -219,88 +372,4 @@ body {
   .attribute-table th {
     width: 140px;
   }
-}
-/* -------------------------------------------------------------------------- */
-/* ProjectFirma-style map pin markers */
-/* -------------------------------------------------------------------------- */
-
-.fuel-treatment-pin-wrapper {
-  background: transparent;
-  border: none;
-}
-
-.fuel-treatment-pin {
-  width: 30px;
-  height: 30px;
-  border: 3px solid #111827;
-  border-radius: 50% 50% 50% 0;
-  transform: rotate(-45deg);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
-  position: relative;
-}
-
-.fuel-treatment-pin-dot {
-  width: 10px;
-  height: 10px;
-  background: #111827;
-  border-radius: 50%;
-  position: absolute;
-  top: 7px;
-  left: 7px;
-}
-
-/* -------------------------------------------------------------------------- */
-/* Project-style popup */
-/* -------------------------------------------------------------------------- */
-
-.project-popup-container .leaflet-popup-content-wrapper {
-  border-radius: 12px;
-  padding: 12px 16px;
-  box-shadow: 0 4px 18px rgba(15, 23, 42, 0.28);
-}
-
-.project-popup-container .leaflet-popup-content {
-  margin: 0;
-  font-size: 11px;
-  line-height: 1.35;
-}
-
-.project-popup {
-  min-width: 390px;
-  max-width: 560px;
-}
-
-.project-popup-title {
-  margin: 0 0 14px;
-  padding-bottom: 4px;
-  border-bottom: 1px solid #c7c7c7;
-  font-size: 1.25rem;
-  line-height: 1.25;
-}
-
-.project-popup-title a {
-  color: #0077a8;
-  font-weight: 800;
-  text-decoration: underline;
-}
-
-.project-popup-details p {
-  margin: 4px 0;
-  color: #333333;
-}
-
-.project-popup-details strong {
-  font-weight: 800;
-}
-
-.project-popup-footer {
-  margin: 18px 0 0;
-  text-align: center;
-  color: #333333;
-}
-
-.project-popup-footer a {
-  color: #0077a8;
-  font-weight: 700;
-  text-decoration: underline;
 }
