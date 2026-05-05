@@ -398,3 +398,33 @@ body {
     margin: 0 0 16px auto;
   }
 }
+
+.project-popup-description {
+  margin-top: 12px;
+  padding-top: 10px;
+  border-top: 1px solid #e5e7eb;
+  line-height: 1.45;
+}
+
+.related-links {
+  margin-top: 18px;
+  padding: 14px 16px;
+  background: #f8fafc;
+  border: 1px solid #dbe3ea;
+  border-radius: 10px;
+}
+
+.related-links h3 {
+  margin: 0 0 8px;
+  color: #24384a;
+}
+
+.related-links p {
+  margin: 0;
+}
+
+.related-links a {
+  color: #0077a8;
+  font-weight: 700;
+  text-decoration: underline;
+}
