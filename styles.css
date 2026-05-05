@@ -373,3 +373,28 @@ body {
     width: 140px;
   }
 }
+/* -------------------------------------------------------------------------- */
+/* Fire Safe Council logo */
+/* -------------------------------------------------------------------------- */
+
+.site-logo {
+  position: fixed;
+  top: 18px;
+  right: 22px;
+  width: 130px;
+  height: auto;
+  z-index: 1000;
+  background: rgba(255, 255, 255, 0.92);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.18);
+}
+
+@media (max-width: 800px) {
+  .site-logo {
+    position: static;
+    display: block;
+    width: 110px;
+    margin: 0 0 16px auto;
+  }
+}
