@@ -175,6 +175,8 @@ async function loadProjectDetail() {
 
     const name = getFeatureName(project, projectIndex);
 
+    const customDetails = getCustomProjectDetails(name);
+
     const type = getProperty(props, [
       'treatment_type',
       'Treatment_Type',
@@ -250,14 +252,38 @@ async function loadProjectDetail() {
     ]);
 
     setText('projectName', name);
-    setText('projectDescription', description || 'No description is currently listed for this fuel treatment area.');
-    setText('projectType', type);
-    setText('projectStatus', status);
-    setText('projectAcres', acres);
-    setText('projectYear', year);
-    setText('projectLead', lead);
-    setText('projectFunding', funding);
-    setText('projectContact', contact);
+
+setText(
+  'projectDescription',
+  customDetails?.description ||
+    description ||
+    'No description is currently listed for this fuel treatment area.'
+);
+
+setText('projectType', customDetails?.focusArea || type);
+setText('projectStatus', customDetails?.status || status);
+setText('projectAcres', acres);
+setText('projectYear', year);
+setText('projectLead', customDetails?.leadImplementer || lead);
+setText('projectFunding', funding);
+setText('projectContact', contact);
+
+    const relatedLinks = document.getElementById('projectRelatedLinks');
+
+if (relatedLinks) {
+  if (customDetails?.storyMapUrl) {
+    relatedLinks.innerHTML = `
+      <h3>Related Links</h3>
+      <p>
+        <a href="${customDetails.storyMapUrl}" target="_blank" rel="noopener noreferrer">
+          View Montecito Roadside Fuel Reduction StoryMap
+        </a>
+      </p>
+    `;
+  } else {
+    relatedLinks.innerHTML = '';
+  }
+}
 
     populateAttributeTable(props);
     drawDetailMap(project);
