@@ -213,11 +213,39 @@ function getMarkerIconForCategory(category) {
 // -----------------------------------------------------------------------------
 // Popup content
 // -----------------------------------------------------------------------------
+function getCustomProjectDetails(projectName) {
+  if (projectName === 'Montecito Roadside Fuel Reduction') {
+    return {
+      status: 'Potential/Ongoing',
+      duration: '',
+      leadImplementer: '',
+      focusArea: 'Roadside Fire Hazard Abatement',
+      goal: '',
+      strategy: '',
+      estimatedTotalCost: '',
+      description:
+        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
+      storyMapUrl:
+        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
+    };
+  }
 
+  return null;
+}
 function buildPopupContent(feature, index) {
   const featureId = encodeURIComponent(getFeatureId(feature, index));
   const name = getFeatureName(feature, index);
   const category = getProjectCategory(feature);
+  const customDetails = getCustomProjectDetails(name);
+
+  const status = customDetails?.status || category;
+  const duration = customDetails?.duration || '';
+  const leadImplementer = customDetails?.leadImplementer || '';
+  const focusArea = customDetails?.focusArea || '';
+  const goal = customDetails?.goal || '';
+  const strategy = customDetails?.strategy || '';
+  const estimatedTotalCost = customDetails?.estimatedTotalCost || '';
+  const description = customDetails?.description || '';
 
   return `
     <div class="project-popup">
@@ -226,13 +254,18 @@ function buildPopupContent(feature, index) {
       </h3>
 
       <div class="project-popup-details">
-        <p><strong>Project Status:</strong> ${category}</p>
-        <p><strong>Duration:</strong> </p>
-        <p><strong>Lead Implementer:</strong> </p>
-        <p><strong>Focus Area:</strong> </p>
-        <p><strong>Goal:</strong> </p>
-        <p><strong>Strategy:</strong> </p>
-        <p><strong>Estimated Total Cost:</strong> </p>
+        <p><strong>Project Status:</strong> ${status}</p>
+        <p><strong>Duration:</strong> ${duration}</p>
+        <p><strong>Lead Implementer:</strong> ${leadImplementer}</p>
+        <p><strong>Focus Area:</strong> ${focusArea}</p>
+        <p><strong>Goal:</strong> ${goal}</p>
+        <p><strong>Strategy:</strong> ${strategy}</p>
+        <p><strong>Estimated Total Cost:</strong> ${estimatedTotalCost}</p>
+        ${
+          description
+            ? `<p class="project-popup-description">${description}</p>`
+            : ''
+        }
       </div>
 
       <p class="project-popup-footer">
