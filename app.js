@@ -49,9 +49,9 @@ function makePinIcon(fillColor) {
         <div class="fuel-treatment-pin-dot"></div>
       </div>
     `,
-    iconSize: [32, 42],
-    iconAnchor: [16, 42],
-    popupAnchor: [0, -38]
+    iconSize: [18, 24],
+    iconAnchor: [9, 24],
+    popupAnchor: [0, -22]
   });
 }
 
