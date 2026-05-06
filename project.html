@@ -11,44 +11,35 @@
 </head>
 
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <h1>Santa Barbara County Fire Safe Council</h1>
-      <p>Fuel Treatment Detail</p>
-    </div>
-
-    <nav>
-      <a href="index.html">Map</a>
-      <a href="index.html#project-list">Fuel Treatment List</a>
-      <a href="index.html#about">About</a>
-    </nav>
-  </header>
-
   <main class="page detail-page">
     <img
-  src="sbfsc-green-yellow.png"
-  alt="Santa Barbara County Fire Safe Council logo"
-  class="site-logo"
-/>
+      src="sbfsc-green-yellow.png"
+      alt="Santa Barbara County Fire Safe Council logo"
+      class="site-logo"
+    />
+
     <a href="index.html" class="back-link">← Back to Fuel Treatment Map</a>
 
     <section class="project-detail-card">
-      <h2 id="projectName">Fuel Treatment Area</h2>
-      <p id="projectDescription" class="project-description"></p>
-      
+      <h1 id="projectName">Fuel Treatment Area</h1>
+
+      <p id="projectDescription" class="project-description">
+        Loading project description...
+      </p>
+
       <div id="projectRelatedLinks" class="related-links"></div>
 
       <div class="detail-grid">
         <div>
-          <h3>Project Basics</h3>
+          <h2>Project Basics</h2>
           <p><strong>Type:</strong> <span id="projectType">Not listed</span></p>
           <p><strong>Status:</strong> <span id="projectStatus">Not listed</span></p>
           <p><strong>Acres:</strong> <span id="projectAcres">Not listed</span></p>
-          <p><strong>Year:</strong> <span id="projectYear">Not listed</span></p>
+          <p><strong>Year / Duration:</strong> <span id="projectYear">Not listed</span></p>
         </div>
 
         <div>
-          <h3>Organization</h3>
+          <h2>Organization</h2>
           <p><strong>Lead:</strong> <span id="projectLead">Not listed</span></p>
           <p><strong>Funding Source:</strong> <span id="projectFunding">Not listed</span></p>
           <p><strong>Contact:</strong> <span id="projectContact">Not listed</span></p>
@@ -57,14 +48,18 @@
     </section>
 
     <section class="project-detail-card">
-      <h3>Project Location</h3>
+      <h2>Project Location</h2>
       <div id="detailMap"></div>
     </section>
 
     <section class="project-detail-card">
-      <h3>All Available Attributes</h3>
+      <h2>All Available Attributes</h2>
       <table class="attribute-table">
-        <tbody id="attributeTableBody"></tbody>
+        <tbody id="attributeTableBody">
+          <tr>
+            <td>Loading attributes...</td>
+          </tr>
+        </tbody>
       </table>
     </section>
   </main>
