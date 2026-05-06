@@ -9,6 +9,9 @@ const GEOJSON_LAYER_NAME = 'Fuel Treatment Points';
 const COUNTY_BOUNDARY_FILE = 'sb_county_boundary.geojson';
 const COUNTY_BOUNDARY_LAYER_NAME = 'Santa Barbara County Boundary';
 
+// Active filter for top filter tabs
+let activeFilter = 'All';
+
 // Initialize map
 const map = L.map('map').setView([34.7, -120.0], 9);
 
@@ -55,7 +58,6 @@ function makePinIcon(fillColor) {
   });
 }
 
-
 const iconPotential = makePinIcon('#f4b000');
 const iconCurrent = makePinIcon('#2b7de9');
 const iconCompleted = makePinIcon('#5b4bc4');
@@ -74,6 +76,7 @@ function getProperty(props, names, fallback = '') {
       return props[name];
     }
   }
+
   return fallback;
 }
 
@@ -146,16 +149,48 @@ function getFeatureCenterLatLng(feature) {
 }
 
 // -----------------------------------------------------------------------------
+// Custom project details
+// -----------------------------------------------------------------------------
+
+function getCustomProjectDetails(projectName) {
+  if (projectName === 'Montecito Roadside Fuel Reduction') {
+    return {
+      status: 'Current',
+      duration: 'Annually',
+      leadImplementer: 'Montecito Fire Department',
+      focusArea: 'Roadside Fire Hazard Abatement',
+      goal: 'Wildfire community protection',
+      strategy: '',
+      estimatedTotalCost: '',
+      description:
+        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
+      storyMapUrl:
+        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
+    };
+  }
+
+  return null;
+}
+
+// -----------------------------------------------------------------------------
 // Status/category handling
 // -----------------------------------------------------------------------------
 
-function getProjectCategory(feature) {
+function getProjectCategory(feature, index = 0) {
   const props = feature.properties || {};
-  const name = getFeatureName(feature, 0);
+  const name = getFeatureName(feature, index);
+  const customDetails = getCustomProjectDetails(name);
 
-  // Custom override for Montecito Roadside Fuel Reduction
-  if (name === 'Montecito Roadside Fuel Reduction') {
+  if (customDetails?.status === 'Current') {
     return 'Current';
+  }
+
+  if (customDetails?.status === 'Completed') {
+    return 'Completed';
+  }
+
+  if (customDetails?.status === 'Potential/Ongoing') {
+    return 'Potential/Ongoing';
   }
 
   const rawStatus = String(
@@ -210,10 +245,6 @@ function getProjectCategory(feature) {
   return 'Potential/Ongoing';
 }
 
-  // Default bucket while your data is still being built out
-  return 'Potential/Ongoing';
-}
-
 function getMarkerIconForCategory(category) {
   if (category === 'Current') return iconCurrent;
   if (category === 'Completed') return iconCompleted;
@@ -223,48 +254,11 @@ function getMarkerIconForCategory(category) {
 // -----------------------------------------------------------------------------
 // Popup content
 // -----------------------------------------------------------------------------
-function getCustomProjectDetails(projectName) {
-  if (projectName === 'Montecito Roadside Fuel Reduction') {
-    return {
-      status: 'Potential/Ongoing',
-      duration: '',
-      leadImplementer: '',
-      focusArea: 'Roadside Fire Hazard Abatement',
-      goal: '',
-      strategy: '',
-      estimatedTotalCost: '',
-      description:
-        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
-      storyMapUrl:
-        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
-    };
-  }
 
-  return null;
-}
-function getCustomProjectDetails(projectName) {
-  if (projectName === 'Montecito Roadside Fuel Reduction') {
-    return {
-      status: 'Current',
-      duration: 'Annually',
-      leadImplementer: 'Montecito Fire Department',
-      focusArea: 'Roadside Fire Hazard Abatement',
-      goal: 'Wildfire community protection',
-      strategy: '',
-      estimatedTotalCost: '',
-      description:
-        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
-      storyMapUrl:
-        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
-    };
-  }
-
-  return null;
-}
 function buildPopupContent(feature, index) {
   const featureId = encodeURIComponent(getFeatureId(feature, index));
   const name = getFeatureName(feature, index);
-  const category = getProjectCategory(feature);
+  const category = getProjectCategory(feature, index);
   const customDetails = getCustomProjectDetails(name);
 
   const status = customDetails?.status || category;
@@ -295,49 +289,6 @@ function buildPopupContent(feature, index) {
             ? `<p class="project-popup-description">${description}</p>`
             : ''
         }
-        function buildPopupContent(feature, index) {
-  const featureId = encodeURIComponent(getFeatureId(feature, index));
-  const name = getFeatureName(feature, index);
-  const category = getProjectCategory(feature);
-  const customDetails = getCustomProjectDetails(name);
-
-  const status = customDetails?.status || category;
-  const duration = customDetails?.duration || '';
-  const leadImplementer = customDetails?.leadImplementer || '';
-  const focusArea = customDetails?.focusArea || '';
-  const goal = customDetails?.goal || '';
-  const strategy = customDetails?.strategy || '';
-  const estimatedTotalCost = customDetails?.estimatedTotalCost || '';
-  const description = customDetails?.description || '';
-
-  return `
-    <div class="project-popup">
-      <h3 class="project-popup-title">
-        <a href="project.html?id=${featureId}">${name}</a>
-      </h3>
-
-      <div class="project-popup-details">
-        <p><strong>Project Status:</strong> ${status}</p>
-        <p><strong>Duration:</strong> ${duration}</p>
-        <p><strong>Lead Implementer:</strong> ${leadImplementer}</p>
-        <p><strong>Focus Area:</strong> ${focusArea}</p>
-        <p><strong>Goal:</strong> ${goal}</p>
-        <p><strong>Strategy:</strong> ${strategy}</p>
-        <p><strong>Estimated Total Cost:</strong> ${estimatedTotalCost}</p>
-        ${
-          description
-            ? `<p class="project-popup-description">${description}</p>`
-            : ''
-        }
-      </div>
-
-      <p class="project-popup-footer">
-        For project details, see the
-        <a href="project.html?id=${featureId}">Project Fact Sheet</a>
-      </p>
-    </div>
-  `;
-}
       </div>
 
       <p class="project-popup-footer">
@@ -395,7 +346,6 @@ async function loadFuelTreatmentPoints() {
     allFeatures = data.features || [];
 
     renderFilteredProjects();
-    addLayerControl();
   } catch (error) {
     console.warn('Could not load fuel treatment points:', error);
   }
@@ -406,7 +356,7 @@ async function loadFuelTreatmentPoints() {
 // -----------------------------------------------------------------------------
 
 function renderFilteredProjects() {
- const filterValue = activeFilter || 'All';
+  const filterValue = activeFilter || 'All';
 
   if (fuelTreatmentPointLayer) {
     map.removeLayer(fuelTreatmentPointLayer);
@@ -414,8 +364,8 @@ function renderFilteredProjects() {
 
   fuelTreatmentPointLayer = L.layerGroup();
 
-  const filteredFeatures = allFeatures.filter((feature) => {
-    const category = getProjectCategory(feature);
+  const filteredFeatures = allFeatures.filter((feature, index) => {
+    const category = getProjectCategory(feature, index);
     return filterValue === 'All' || category === filterValue;
   });
 
@@ -423,11 +373,13 @@ function renderFilteredProjects() {
 
   filteredFeatures.forEach((feature, index) => {
     const latlng = getFeatureCenterLatLng(feature);
+
     if (!latlng) return;
 
     allLatLngs.push(latlng);
 
-    const category = getProjectCategory(feature);
+    const category = getProjectCategory(feature, index);
+
     const marker = L.marker(latlng, {
       icon: getMarkerIconForCategory(category),
       title: getFeatureName(feature, index)
@@ -446,6 +398,7 @@ function renderFilteredProjects() {
 
   if (allLatLngs.length > 0) {
     const bounds = L.latLngBounds(allLatLngs);
+
     map.fitBounds(bounds, {
       padding: [30, 30],
       maxZoom: 11
@@ -453,15 +406,6 @@ function renderFilteredProjects() {
   }
 
   addLayerControl();
-}
-
-// -----------------------------------------------------------------------------
-// Project list intentionally disabled on main page
-// -----------------------------------------------------------------------------
-
-function populateFeatureList(features) {
-  // Project list intentionally disabled.
-  // Users access project details by clicking map markers.
 }
 
 // -----------------------------------------------------------------------------
@@ -497,14 +441,12 @@ function addLayerControl() {
 // Event listeners
 // -----------------------------------------------------------------------------
 
-let activeFilter = 'All';
-
 document.addEventListener('DOMContentLoaded', () => {
   const filterTabs = document.querySelectorAll('.filter-tab');
 
   filterTabs.forEach((tab) => {
     tab.addEventListener('click', () => {
-      activeFilter = tab.dataset.filter;
+      activeFilter = tab.dataset.filter || 'All';
 
       filterTabs.forEach((button) => {
         button.classList.remove('active');
