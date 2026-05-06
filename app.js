@@ -295,6 +295,49 @@ function buildPopupContent(feature, index) {
             ? `<p class="project-popup-description">${description}</p>`
             : ''
         }
+        function buildPopupContent(feature, index) {
+  const featureId = encodeURIComponent(getFeatureId(feature, index));
+  const name = getFeatureName(feature, index);
+  const category = getProjectCategory(feature);
+  const customDetails = getCustomProjectDetails(name);
+
+  const status = customDetails?.status || category;
+  const duration = customDetails?.duration || '';
+  const leadImplementer = customDetails?.leadImplementer || '';
+  const focusArea = customDetails?.focusArea || '';
+  const goal = customDetails?.goal || '';
+  const strategy = customDetails?.strategy || '';
+  const estimatedTotalCost = customDetails?.estimatedTotalCost || '';
+  const description = customDetails?.description || '';
+
+  return `
+    <div class="project-popup">
+      <h3 class="project-popup-title">
+        <a href="project.html?id=${featureId}">${name}</a>
+      </h3>
+
+      <div class="project-popup-details">
+        <p><strong>Project Status:</strong> ${status}</p>
+        <p><strong>Duration:</strong> ${duration}</p>
+        <p><strong>Lead Implementer:</strong> ${leadImplementer}</p>
+        <p><strong>Focus Area:</strong> ${focusArea}</p>
+        <p><strong>Goal:</strong> ${goal}</p>
+        <p><strong>Strategy:</strong> ${strategy}</p>
+        <p><strong>Estimated Total Cost:</strong> ${estimatedTotalCost}</p>
+        ${
+          description
+            ? `<p class="project-popup-description">${description}</p>`
+            : ''
+        }
+      </div>
+
+      <p class="project-popup-footer">
+        For project details, see the
+        <a href="project.html?id=${featureId}">Project Fact Sheet</a>
+      </p>
+    </div>
+  `;
+}
       </div>
 
       <p class="project-popup-footer">
