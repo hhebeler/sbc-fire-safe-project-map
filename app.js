@@ -406,8 +406,7 @@ async function loadFuelTreatmentPoints() {
 // -----------------------------------------------------------------------------
 
 function renderFilteredProjects() {
-  const statusFilter = document.getElementById('statusFilter');
-  const filterValue = statusFilter ? statusFilter.value : 'All';
+ const filterValue = activeFilter || 'All';
 
   if (fuelTreatmentPointLayer) {
     map.removeLayer(fuelTreatmentPointLayer);
