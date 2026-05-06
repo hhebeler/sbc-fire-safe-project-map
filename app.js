@@ -242,6 +242,25 @@ function getCustomProjectDetails(projectName) {
 
   return null;
 }
+function getCustomProjectDetails(projectName) {
+  if (projectName === 'Montecito Roadside Fuel Reduction') {
+    return {
+      status: 'Current',
+      duration: 'Annually',
+      leadImplementer: 'Montecito Fire Department',
+      focusArea: 'Roadside Fire Hazard Abatement',
+      goal: 'Wildfire community protection',
+      strategy: '',
+      estimatedTotalCost: '',
+      description:
+        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
+      storyMapUrl:
+        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
+    };
+  }
+
+  return null;
+}
 function buildPopupContent(feature, index) {
   const featureId = encodeURIComponent(getFeatureId(feature, index));
   const name = getFeatureName(feature, index);
