@@ -151,6 +151,12 @@ function getFeatureCenterLatLng(feature) {
 
 function getProjectCategory(feature) {
   const props = feature.properties || {};
+  const name = getFeatureName(feature, 0);
+
+  // Custom override for Montecito Roadside Fuel Reduction
+  if (name === 'Montecito Roadside Fuel Reduction') {
+    return 'Current';
+  }
 
   const rawStatus = String(
     getProperty(
@@ -192,6 +198,7 @@ function getProjectCategory(feature) {
 
   if (
     rawStatus.includes('planning') ||
+    rawStatus.includes('planned') ||
     rawStatus.includes('design') ||
     rawStatus.includes('potential') ||
     rawStatus.includes('proposed') ||
@@ -199,6 +206,9 @@ function getProjectCategory(feature) {
   ) {
     return 'Potential/Ongoing';
   }
+
+  return 'Potential/Ongoing';
+}
 
   // Default bucket while your data is still being built out
   return 'Potential/Ongoing';
