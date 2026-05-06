@@ -252,7 +252,7 @@ async function loadProjectDetail() {
       'Summary'
     ]);
 
-    setText('projectName', name);
+setText('projectName', name);
 
 setText(
   'projectDescription',
@@ -264,7 +264,7 @@ setText(
 setText('projectType', customDetails?.focusArea || type);
 setText('projectStatus', customDetails?.status || status);
 setText('projectAcres', acres);
-setText('projectYear', year);
+setText('projectYear', customDetails?.duration || year);
 setText('projectLead', customDetails?.leadImplementer || lead);
 setText('projectFunding', funding);
 setText('projectContact', contact);
