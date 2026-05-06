@@ -498,12 +498,23 @@ function addLayerControl() {
 // Event listeners
 // -----------------------------------------------------------------------------
 
-document.addEventListener('DOMContentLoaded', () => {
-  const statusFilter = document.getElementById('statusFilter');
+let activeFilter = 'All';
 
-  if (statusFilter) {
-    statusFilter.addEventListener('change', renderFilteredProjects);
-  }
+document.addEventListener('DOMContentLoaded', () => {
+  const filterTabs = document.querySelectorAll('.filter-tab');
+
+  filterTabs.forEach((tab) => {
+    tab.addEventListener('click', () => {
+      activeFilter = tab.dataset.filter;
+
+      filterTabs.forEach((button) => {
+        button.classList.remove('active');
+      });
+
+      tab.classList.add('active');
+      renderFilteredProjects();
+    });
+  });
 });
 
 // -----------------------------------------------------------------------------
