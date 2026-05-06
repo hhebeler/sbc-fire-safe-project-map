@@ -5,9 +5,19 @@
 
 const GEOJSON_FILE = 'Fuel_Treatment_FeaturesToJSO.geojson';
 
+// -----------------------------------------------------------------------------
+// URL / DOM helpers
+// -----------------------------------------------------------------------------
+
 function getProjectIdFromUrl() {
   const params = new URLSearchParams(window.location.search);
   return params.get('id');
+}
+
+function setText(elementId, value) {
+  const element = document.getElementById(elementId);
+  if (!element) return;
+  element.textContent = value || 'Not listed';
 }
 
 function getProperty(props, names, fallback = '') {
@@ -20,19 +30,18 @@ function getProperty(props, names, fallback = '') {
       return props[name];
     }
   }
+
   return fallback;
 }
 
-function setText(elementId, value) {
-  const element = document.getElementById(elementId);
-  if (!element) return;
-  element.textContent = value || 'Not listed';
-}
+// -----------------------------------------------------------------------------
+// Feature helpers
+// -----------------------------------------------------------------------------
 
 function getFeatureId(feature, index) {
   const props = feature.properties || {};
 
-  return (
+  return String(
     getProperty(props, [
       'id',
       'ID',
@@ -43,7 +52,9 @@ function getFeatureId(feature, index) {
       'GLOBALID',
       'project_id',
       'PROJECT_ID'
-    ]) || String(index)
+    ]) ||
+      feature.id ||
+      index
   );
 }
 
@@ -65,46 +76,51 @@ function getFeatureName(feature, index) {
       'PROJECT',
       'Project'
     ],
-    `Fuel Treatment Area ${index + 1}`
+    `Fuel Treatment Project ${index + 1}`
   );
 }
 
-function getFuelTreatmentStyle(feature) {
-  const props = feature.properties || {};
+// -----------------------------------------------------------------------------
+// Custom project details
+// -----------------------------------------------------------------------------
 
-  const type = String(
-    getProperty(props, [
-      'treatment_type',
-      'Treatment_Type',
-      'TREATMENT_TYPE',
-      'type',
-      'Type',
-      'TYPE'
-    ])
-  ).toLowerCase();
-
-  let fillColor = '#14b8a6';
-
-  if (type.includes('chipping')) {
-    fillColor = '#2563eb';
-  } else if (type.includes('grazing')) {
-    fillColor = '#16a34a';
-  } else if (type.includes('mastication')) {
-    fillColor = '#b45309';
-  } else if (type.includes('burn')) {
-    fillColor = '#dc2626';
-  } else if (type.includes('fuel')) {
-    fillColor = '#f59e0b';
+function getCustomProjectDetails(projectName) {
+  if (projectName === 'Montecito Roadside Fuel Reduction') {
+    return {
+      status: 'Current',
+      duration: 'Annually',
+      leadImplementer: 'Montecito Fire Department',
+      focusArea: 'Roadside Fire Hazard Abatement',
+      goal: 'Wildfire community protection',
+      strategy: '',
+      estimatedTotalCost: '',
+      description:
+        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
+      storyMapUrl:
+        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
+    };
   }
 
+  return null;
+}
+
+// -----------------------------------------------------------------------------
+// Detail map styling
+// -----------------------------------------------------------------------------
+
+function getFuelTreatmentStyle(feature) {
   return {
-    color: '#0f172a',
-    weight: 2,
-    opacity: 0.95,
-    fillColor: fillColor,
-    fillOpacity: 0.4
+    color: '#111827',
+    weight: 3,
+    opacity: 1,
+    fillColor: '#f4b000',
+    fillOpacity: 0.25
   };
 }
+
+// -----------------------------------------------------------------------------
+// Attribute table
+// -----------------------------------------------------------------------------
 
 function populateAttributeTable(props) {
   const tbody = document.getElementById('attributeTableBody');
@@ -131,15 +147,99 @@ function populateAttributeTable(props) {
   });
 }
 
+// -----------------------------------------------------------------------------
+// Related links
+// -----------------------------------------------------------------------------
+
+function populateRelatedLinks(customDetails) {
+  const relatedLinks = document.getElementById('projectRelatedLinks');
+
+  if (!relatedLinks) return;
+
+  if (customDetails?.storyMapUrl) {
+    relatedLinks.innerHTML = `
+      <h3>Related Links</h3>
+      <p>
+        <a href="${customDetails.storyMapUrl}" target="_blank" rel="noopener noreferrer">
+          View Montecito Roadside Fuel Reduction StoryMap
+        </a>
+      </p>
+    `;
+  } else {
+    relatedLinks.innerHTML = '';
+  }
+}
+
+// -----------------------------------------------------------------------------
+// Error display
+// -----------------------------------------------------------------------------
+
 function showProjectNotFound(message) {
   setText('projectName', 'Project not found');
   setText('projectDescription', message);
 
   const mapContainer = document.getElementById('detailMap');
+
   if (mapContainer) {
-    mapContainer.innerHTML = '';
+    mapContainer.innerHTML = '<p class="map-error">Project map could not be loaded.</p>';
   }
 }
+
+// -----------------------------------------------------------------------------
+// Draw detail map
+// -----------------------------------------------------------------------------
+
+function drawDetailMap(project) {
+  const mapContainer = document.getElementById('detailMap');
+
+  if (!mapContainer) {
+    console.warn('detailMap container was not found.');
+    return;
+  }
+
+  // Clear any previous Leaflet instance markup if the page is reloaded/hot-refreshed
+  mapContainer.innerHTML = '';
+
+  const detailMap = L.map('detailMap', {
+    scrollWheelZoom: true
+  }).setView([34.7, -120.0], 9);
+
+  L.tileLayer(
+    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+    {
+      attribution: 'Tiles &copy; Esri'
+    }
+  ).addTo(detailMap);
+
+  const projectLayer = L.geoJSON(project, {
+    style: getFuelTreatmentStyle,
+    pointToLayer: function (feature, latlng) {
+      return L.circleMarker(latlng, {
+        radius: 8,
+        color: '#111827',
+        weight: 2,
+        fillColor: '#f4b000',
+        fillOpacity: 0.9
+      });
+    }
+  }).addTo(detailMap);
+
+  // Important: Leaflet sometimes needs this when maps are inside cards/sections.
+  setTimeout(() => {
+    detailMap.invalidateSize();
+
+    if (projectLayer.getBounds && projectLayer.getBounds().isValid()) {
+      detailMap.fitBounds(projectLayer.getBounds(), {
+        padding: [30, 30],
+        maxZoom: 14
+      });
+    }
+  }, 250);
+}
+
+// -----------------------------------------------------------------------------
+// Main loader
+// -----------------------------------------------------------------------------
 
 async function loadProjectDetail() {
   const projectId = getProjectIdFromUrl();
@@ -172,10 +272,7 @@ async function loadProjectDetail() {
 
     const project = features[projectIndex];
     const props = project.properties || {};
-
     const name = getFeatureName(project, projectIndex);
-    const customDetails = getCustomProjectDetails(name);
-
     const customDetails = getCustomProjectDetails(name);
 
     const type = getProperty(props, [
@@ -192,16 +289,17 @@ async function loadProjectDetail() {
       'Status',
       'STATUS',
       'project_status',
-      'PROJECT_STATUS'
+      'PROJECT_STATUS',
+      'project_stage',
+      'Project_Stage',
+      'PROJECT_STAGE'
     ]);
 
     const acres = getProperty(props, [
       'acres',
       'Acres',
       'ACRES',
-      'GIS_ACRES',
-      'Shape_Area',
-      'shape_area'
+      'GIS_ACRES'
     ]);
 
     const year = getProperty(props, [
@@ -252,40 +350,24 @@ async function loadProjectDetail() {
       'Summary'
     ]);
 
-setText('projectName', name);
+    setText('projectName', name);
 
-setText(
-  'projectDescription',
-  customDetails?.description ||
-    description ||
-    'No description is currently listed for this fuel treatment area.'
-);
+    setText(
+      'projectDescription',
+      customDetails?.description ||
+        description ||
+        'No description is currently listed for this fuel treatment area.'
+    );
 
-setText('projectType', customDetails?.focusArea || type);
-setText('projectStatus', customDetails?.status || status);
-setText('projectAcres', acres);
-setText('projectYear', customDetails?.duration || year);
-setText('projectLead', customDetails?.leadImplementer || lead);
-setText('projectFunding', funding);
-setText('projectContact', contact);
+    setText('projectType', customDetails?.focusArea || type);
+    setText('projectStatus', customDetails?.status || status);
+    setText('projectAcres', acres);
+    setText('projectYear', customDetails?.duration || year);
+    setText('projectLead', customDetails?.leadImplementer || lead);
+    setText('projectFunding', funding);
+    setText('projectContact', contact);
 
-    const relatedLinks = document.getElementById('projectRelatedLinks');
-
-if (relatedLinks) {
-  if (customDetails?.storyMapUrl) {
-    relatedLinks.innerHTML = `
-      <h3>Related Links</h3>
-      <p>
-        <a href="${customDetails.storyMapUrl}" target="_blank" rel="noopener noreferrer">
-          View Montecito Roadside Fuel Reduction StoryMap
-        </a>
-      </p>
-    `;
-  } else {
-    relatedLinks.innerHTML = '';
-  }
-}
-
+    populateRelatedLinks(customDetails);
     populateAttributeTable(props);
     drawDetailMap(project);
   } catch (error) {
@@ -295,92 +377,5 @@ if (relatedLinks) {
     );
   }
 }
-function getCustomProjectDetails(projectName) {
-  if (projectName === 'Montecito Roadside Fuel Reduction') {
-    return {
-      status: 'Potential/Ongoing',
-      duration: '',
-      leadImplementer: '',
-      focusArea: 'Roadside Fire Hazard Abatement',
-      goal: '',
-      strategy: '',
-      estimatedTotalCost: '',
-      description:
-        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
-      storyMapUrl:
-        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
-    };
-  }
 
-  return null;
-}
-function getCustomProjectDetails(projectName) {
-  if (projectName === 'Montecito Roadside Fuel Reduction') {
-    return {
-      status: 'Potential/Ongoing',
-      duration: '',
-      leadImplementer: '',
-      focusArea: 'Roadside Fire Hazard Abatement',
-      goal: '',
-      strategy: '',
-      estimatedTotalCost: '',
-      description:
-        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
-      storyMapUrl:
-        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
-    };
-  }
-
-  return null;
-}
-function drawDetailMap(project) {
-  const detailMap = L.map('detailMap').setView([34.7, -120.0], 9);
-
-  L.tileLayer(
-    'https://server.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
-    {
-      attribution: 'Tiles &copy; Esri'
-    }
-  ).addTo(detailMap);
-
-  const layer = L.geoJSON(project, {
-    style: getFuelTreatmentStyle,
-
-    pointToLayer: function (feature, latlng) {
-      return L.circleMarker(latlng, {
-        radius: 8,
-        color: '#0f172a',
-        weight: 2,
-        fillColor: '#14b8a6',
-        fillOpacity: 0.85
-      });
-    }
-  }).addTo(detailMap);
-
-  if (layer.getBounds().isValid()) {
-    detailMap.fitBounds(layer.getBounds(), {
-      padding: [30, 30],
-      maxZoom: 15
-    });
-  }
-}
-function getCustomProjectDetails(projectName) {
-  if (projectName === 'Montecito Roadside Fuel Reduction') {
-    return {
-      status: 'Current',
-      duration: 'Annually',
-      leadImplementer: 'Montecito Fire Department',
-      focusArea: 'Roadside Fire Hazard Abatement',
-      goal: 'Wildfire community protection',
-      strategy: '',
-      estimatedTotalCost: '',
-      description:
-        'Also in the spring, the District funds fire hazard abatement projects along 12 miles of community roads and trailheads in the High Severity Zones in Montecito. These areas include Gibraltar, West Mountain, Coyote, East Mountain, Bella Vista, Romero Canyon, and Ortega Ridge roads.',
-      storyMapUrl:
-        'https://storymaps.arcgis.com/stories/af1f9293bf414967b590962cfa9be39d'
-    };
-  }
-
-  return null;
-}
 loadProjectDetail();
