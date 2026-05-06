@@ -174,6 +174,7 @@ async function loadProjectDetail() {
     const props = project.properties || {};
 
     const name = getFeatureName(project, projectIndex);
+    const customDetails = getCustomProjectDetails(name);
 
     const customDetails = getCustomProjectDetails(name);
 
