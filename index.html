@@ -27,31 +27,43 @@
 </section>
 
     <section class="filter-panel">
-      <div class="filter-group">
-        <label for="statusFilter">Filter Projects by:</label>
-        <select id="statusFilter">
-          <option value="All">All Projects</option>
-          <option value="Potential/Ongoing">Potential/Ongoing</option>
-          <option value="Current">Current</option>
-          <option value="Completed">Completed</option>
-        </select>
-      </div>
+  <div class="filter-tabs-wrap">
+    <span class="filter-label">Filter Projects by:</span>
 
-      <div class="status-legend">
-        <span class="legend-item">
-          <span class="legend-pin legend-potential"></span>
-          Potential/Ongoing
-        </span>
-        <span class="legend-item">
-          <span class="legend-pin legend-current"></span>
-          Current
-        </span>
-        <span class="legend-item">
-          <span class="legend-pin legend-completed"></span>
-          Completed
-        </span>
-      </div>
-    </section>
+    <div class="filter-tabs" role="group" aria-label="Project status filter">
+      <button class="filter-tab active" data-filter="All" type="button">
+        All Projects
+      </button>
+
+      <button class="filter-tab" data-filter="Potential/Ongoing" type="button">
+        Planned
+      </button>
+
+      <button class="filter-tab" data-filter="Current" type="button">
+        Current
+      </button>
+
+      <button class="filter-tab" data-filter="Completed" type="button">
+        Completed
+      </button>
+    </div>
+  </div>
+
+  <div class="status-legend">
+    <span class="legend-item">
+      <span class="legend-pin legend-potential"></span>
+      Planned
+    </span>
+    <span class="legend-item">
+      <span class="legend-pin legend-current"></span>
+      Current
+    </span>
+    <span class="legend-item">
+      <span class="legend-pin legend-completed"></span>
+      Completed
+    </span>
+  </div>
+</section>
 
     <section class="map-wrap">
       <div id="map"></div>
